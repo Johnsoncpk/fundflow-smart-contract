@@ -6,30 +6,9 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 contract FundFlowProject is ERC721 {
-    using Counters for Counters.Counter;
-    Counters.Counter private _projectIds;
-
-    constructor() ERC721("FundFlowProject", "FFP") {}
-
-    struct Project {
-        string name;
-        string description;
-        string image;
-        string url;
-        uint256 goal;
-        uint256 current;
-        uint256 deadline;
-        address payable creator;
-        address payable[] funders;
-    }
-
-    mapping(uint256 => Project) public projects;
-
     event ProjectCreated(
         uint256 indexed id,
         string name,
-        string description,
-        string image,
         string url,
         uint256 goal,
         uint256 deadline,
@@ -41,6 +20,13 @@ contract FundFlowProject is ERC721 {
         uint256 current,
         address payable funder
     );
+
+    using Counters for Counters.Counter;
+    Counters.Counter private _projectIds;
+
+    constructor() ERC721("FundFlowProject", "FFP") {}
+
+    mapping(uint256 => Project) public projects;
 
     function createProject(
         string memory _name,
