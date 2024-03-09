@@ -44,13 +44,39 @@ const { BigNumber } = require("ethers");
 
         describe("get project", async function () {
             describe("success", async function () {
-                it("Should successfully retreive the first projects", async function () {
-                    const { fundflow } = await loadFixture(deployFundFlowContractFixture)
+                it("should successfully retreive the first projects", async function () {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
                     const projectId = await fundflow.getProjectCount() - 1;
                     const project = await fundflow.projects(projectId);
                     expect(project).is.not.null.and.undefined;
                     expect(await fundflow.projectRounds).is.not.null.and.undefined;
                 })
+
+                it('should get the correct project count', async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
+
+                    const projectCount = await fundflow.getProjectCount();
+                    // Replace 0 with the expected number of projects
+                    expect(projectCount).equal('1');
+                });
+            
+                it('should get a project by id', async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
+                    const projectId = 0; // replace with actual project id
+                    const project = await fundflow.getProject(projectId);
+                    // Add assertions to check the project's properties
+                    // For example, if the project's name is 'Test', you can do:
+                    expect(project.name).to.equal('Test1');
+                });
+            
+                it('should get rounds of a project', async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture)
+                    const projectId = 0; // replace with actual project id
+                    const rounds = await fundflow.getRounds(projectId);
+                    // Add assertions to check the rounds' properties
+                    // For example, if the project has 2 rounds, you can do:
+                    expect(rounds.length).to.equal(2);
+                });
             })
         })
     })
