@@ -5,14 +5,14 @@ pragma experimental ABIEncoderV2;
 
 import { ERC721, ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import "hardhat/console.sol";
 
 using Counters for Counters.Counter;
 
 enum Status {
     Active,
-    WaitingForNextRound,
-    Failed,
-    Completed
+    Completed,
+    Failed
 }
 
 struct Backer {
@@ -44,6 +44,7 @@ error PermissionDenied();
 error NotBakingThisProject();
 error IndexOutOfBounds();
 error FundAlreadyCollected();
+error RoundNotFinished();
 
 contract FundFlow is ERC721URIStorage{
     event ProjectCreated(
@@ -75,7 +76,7 @@ contract FundFlow is ERC721URIStorage{
         return projects.length;
     }
 
-    function getProject(uint256 _id) external view returns (Project memory) {
+    function getProject(uint256 _id) public view returns (Project memory) {
         if(_id > getProjectCount() - 1){
            revert IndexOutOfBounds();
         }
@@ -132,7 +133,6 @@ contract FundFlow is ERC721URIStorage{
  
     function fundProject(uint256 _projectId) public payable {
         Project memory project = projects[_projectId];
-        Round storage round = projectRounds[_projectId][project.currentRound];
         
         if(project.status != Status.Active){
             revert FundingPeriodEnded();
@@ -141,10 +141,15 @@ contract FundFlow is ERC721URIStorage{
         if(msg.value <= 0){
             revert InsufficientAmount();
         }
-        
-        round.collectedFund += msg.value;
 
-        roundBackerContributions[round.id][msg.sender] = msg.value;
+        uint256 remainRound = getRounds(_projectId).length - project.currentRound;
+        uint256 fundPerRound = msg.value / remainRound;
+
+        for (uint256 i = project.currentRound; i < projectRounds[_projectId].length; i++) {
+            Round storage round = projectRounds[_projectId][i];
+            round.collectedFund += fundPerRound;
+            roundBackerContributions[round.id][msg.sender] = fundPerRound;
+        }
 
         emit ProjectFunded(_projectId, project.currentRound, msg.value, payable(msg.sender));
     }
@@ -158,6 +163,10 @@ contract FundFlow is ERC721URIStorage{
            revert FundAlreadyCollected();
         }
 
+        if(currentRound.endAt > block.timestamp){
+            revert RoundNotFinished();
+        }
+
         if(currentRound.collectedFund < currentRound.fundingGoal){
             project.status = Status.Failed;
             emit ProjectStatusUpdated(_projectId, status);
@@ -168,23 +177,20 @@ contract FundFlow is ERC721URIStorage{
             status = Status.Completed;
         }
         else{
-            status = Status.WaitingForNextRound;
+            project.currentRound++;
         }
 
         // distribute fund to project creator
         uint256 fundAfterPlatformFee = currentRound.collectedFund * 19 / 20;
         project.creator.transfer(fundAfterPlatformFee);
         currentRound.amountSentToCreator = fundAfterPlatformFee;
-
         project.status = status;
         emit ProjectStatusUpdated(_projectId, status);
     }
 
-
-
-    function quitBackingProject(uint256 _projectId) public payable{
+    function quitProject(uint256 _projectId) public payable{
         Project storage project = projects[_projectId];
-        
+        uint256 remainingFund = 0;
         for(uint256 i = project.currentRound; i < projectRounds[_projectId].length; i++){
             Round storage round = projectRounds[_projectId][i];
 
@@ -192,12 +198,14 @@ contract FundFlow is ERC721URIStorage{
                 continue;
             }
 
+            console.log(i);
             uint256 contributedFund = roundBackerContributions[round.id][msg.sender];
             round.collectedFund -= contributedFund;
-            payable(msg.sender).transfer(contributedFund);
+            remainingFund += contributedFund;
             delete roundBackerContributions[round.id][msg.sender];
         }
 
+        payable(msg.sender).transfer(remainingFund);
         emit ProjectQuited(_projectId, payable(msg.sender));
     }
 }
