@@ -30,7 +30,7 @@ const FORKING_BLOCK_NUMBER = parseInt(process.env.FORKING_BLOCK_NUMBER) || 0
 // Your API key for Etherscan, obtain one at https://etherscan.io/
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "Your etherscan API key"
 const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY || "Your polygonscan API key"
-const REPORT_GAS = process.env.REPORT_GAS || false
+const REPORT_GAS = process.env.REPORT_GAS || true
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import { ERC721, ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+
 import "hardhat/console.sol";
 
 using Counters for Counters.Counter;
@@ -157,15 +158,16 @@ contract FundFlow is ERC721URIStorage{
     function updateProjectStatus(uint256 _projectId) public {
         Project storage project = projects[_projectId];
         Round storage currentRound =  projectRounds[_projectId][project.currentRound];
-        Status status = project.status;
+        
+        if(currentRound.endAt > block.timestamp){
+            revert RoundNotFinished();
+        }
 
         if(currentRound.amountSentToCreator != 0){
            revert FundAlreadyCollected();
         }
 
-        if(currentRound.endAt > block.timestamp){
-            revert RoundNotFinished();
-        }
+        Status status = project.status;
 
         if(currentRound.collectedFund < currentRound.fundingGoal){
             project.status = Status.Failed;
@@ -198,7 +200,6 @@ contract FundFlow is ERC721URIStorage{
                 continue;
             }
 
-            console.log(i);
             uint256 contributedFund = roundBackerContributions[round.id][msg.sender];
             round.collectedFund -= contributedFund;
             remainingFund += contributedFund;
