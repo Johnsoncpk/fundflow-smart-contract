@@ -6,8 +6,6 @@ pragma experimental ABIEncoderV2;
 import { ERC721, ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
-import "hardhat/console.sol";
-
 using Counters for Counters.Counter;
 
 enum Status {

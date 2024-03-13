@@ -24,25 +24,25 @@ const { assert, expect } = require("chai")
                         "id": 0,
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() / 1000),
+                        "fundingGoal": ethers.utils.parseUnits("0.001", "ether"),
+                        "endAt": Math.floor(Date.now() + 1000/ 1000),
                     },
                     {
                         "id": 0,
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() + 5 / 1000),
+                        "fundingGoal": ethers.utils.parseUnits("0.001", "ether"),
+                        "endAt": Math.floor(Date.now() + 2000 / 1000),
                     },
                     {
                         "id": 0,
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() + 10 / 1000),
+                        "fundingGoal": ethers.utils.parseUnits("0.001", "ether"),
+                        "endAt": Math.floor(Date.now() + 3000 / 1000),
                     },
                 ],
-                ethers.utils.parseUnits("75", "ether")
+                ethers.utils.parseUnits("0.003", "ether")
             )
 
             return { fundflow }

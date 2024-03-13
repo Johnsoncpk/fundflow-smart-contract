@@ -13,25 +13,15 @@ const { network, run } = require("hardhat")
 // const {
 //     deployRandomNumberDirectFundingConsumer,
 // } = require("./deployRandomNumberDirectFundingConsumer")
-const { deployFundFlowProject } = require("./deployFundFlowProject")
+const { deployFundFlow } = require("./deployFundFlow")
 
 
 async function main() {
     await run("compile")
     const chainId = network.config.chainId
-    // await deployApiConsumer(chainId)
-    // await deployAutomationCounter(chainId)
-    // await deployPriceConsumerV3(chainId)
-    // await deployRandomNumberConsumer(chainId)
-    // await deployRandomNumberDirectFundingConsumer(chainId)
-
-    await deployFundFlowProject(chainId)
-    // await deployFundFlowBacker(chainId)
-    // await deployFundFlow(chainId)
+    await deployFundFlow(chainId)
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
     console.error(error)
     process.exitCode = 1

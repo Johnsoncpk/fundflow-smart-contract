@@ -1,5 +1,4 @@
 require("@nomicfoundation/hardhat-toolbox")
-require("./tasks")
 require("dotenv").config()
 
 const COMPILER_SETTINGS = {

@@ -4,24 +4,24 @@ const {
     developmentChains,
 } = require("../../helper-hardhat-config")
 
-async function deployFundFlowProject() {
-    const fundFlowProjectFactory = await ethers.getContractFactory("FundFlowProject")
-    const fundFlowProject = await fundFlowProjectFactory.deploy()
+async function deployFundFlow() {
+    const fundflowFactory = await ethers.getContractFactory("FundFlow");
+    const fundflow = await fundflowFactory.deploy("0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0");
 
     const waitBlockConfirmations = developmentChains.includes(network.name)
         ? 1
         : VERIFICATION_BLOCK_CONFIRMATIONS
-    await fundFlowProject.deployTransaction.wait(waitBlockConfirmations)
+    await fundflow.deployTransaction.wait(waitBlockConfirmations)
 
-    console.log(`FundFlow Project deployed to ${fundFlowProject.address} on ${network.name}`)
+    console.log(`FundFlow Project deployed to ${fundflow.address} on ${network.name}`)
 
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         await run("verify:verify", {
-            address: fundFlowProject.address
+            address: fundflow.address
         })
     }
 }
 
 module.exports = {
-    deployFundFlowProject,
+    deployFundFlow,
 }
