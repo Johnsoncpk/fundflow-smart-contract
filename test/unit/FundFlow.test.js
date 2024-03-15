@@ -6,7 +6,7 @@ const { assert, expect } = require("chai")
 
 !developmentChains.includes(network.name)
     ? describe.skip
-    : describe("Fundflow Unit Tests", async function () {
+    : describe.only("Fundflow Unit Tests", async function () {
         //set log level to ignore non errors
         ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
@@ -312,7 +312,7 @@ const { assert, expect } = require("chai")
                     await fundflow.updateProjectStatus(projectId);
 
                     await expect(fundflow.updateProjectStatus(projectId))
-                        .to.be.revertedWithCustomError(fundflow, "FundAlreadyCollected");
+                        .to.be.revertedWithCustomError(fundflow, "ProjectCompleted");
                 })
             })
         })
