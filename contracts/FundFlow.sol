@@ -62,11 +62,10 @@ contract FundFlow is ERC721URIStorage{
         uint256 id,
         address payable quiter);
     
+    Counters.Counter private roundId;
+
     Project[] public projects;
     mapping(uint256 => Round[]) public projectRounds;
-    
-    Counters.Counter private roundId;
-    
     // roundId -> address[]
     mapping(uint256 => address[]) public roundBackers;
     // roundId -> address -> contribution
@@ -103,8 +102,6 @@ contract FundFlow is ERC721URIStorage{
         uint256 _totalFundingGoal
     ) public returns (Project memory) {
         uint256 projectId = getProjectCount();
-        
-        // should check if sum of portions == 100
 
         projects.push(Project(
             _name,
@@ -171,9 +168,6 @@ contract FundFlow is ERC721URIStorage{
             {
                 address backer = backers[j];
                 uint256 contributedFund = roundBackerContributions[j][backer];
-                if(contributedFund == 0){
-                    continue;
-                }
                 round.collectedFund -= contributedFund;
                 payable(backer).transfer(contributedFund);
             }
@@ -221,10 +215,6 @@ contract FundFlow is ERC721URIStorage{
             revert RoundNotFinished();
         }
 
-        if(currentRound.amountSentToCreator != 0){
-           revert FundAlreadyCollected();
-        }
-
         Status status = project.status;
 
         if(currentRound.collectedFund < currentRound.fundingGoal){
@@ -242,7 +232,7 @@ contract FundFlow is ERC721URIStorage{
         }
 
         // distribute fund to project creator
-        uint256 fundAfterPlatformFee = currentRound.collectedFund * 19 / 20;
+        uint256 fundAfterPlatformFee = currentRound.collectedFund * 99 / 100;
         project.creator.transfer(fundAfterPlatformFee);
         currentRound.amountSentToCreator = fundAfterPlatformFee;
         project.status = status;

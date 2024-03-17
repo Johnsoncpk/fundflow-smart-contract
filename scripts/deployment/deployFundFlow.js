@@ -6,7 +6,7 @@ const {
 
 async function deployFundFlow() {
     const fundflowFactory = await ethers.getContractFactory("FundFlow");
-    const fundflow = await fundflowFactory.deploy("0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0");
+    const fundflow = await fundflowFactory.deploy();
 
     const waitBlockConfirmations = developmentChains.includes(network.name)
         ? 1
