@@ -92,6 +92,10 @@ contract FundFlow is ERC721URIStorage{
         return projectRounds[_projectId];
     }
 
+    function getBackers(uint256 _roundId) public view returns (address[] memory){
+        return roundBackers[_roundId];
+    }
+
     function createProject(
         string memory _name,
         string memory _url,

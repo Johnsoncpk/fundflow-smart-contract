@@ -123,7 +123,7 @@ const { assert, expect } = require("chai")
 
         describe("fund project", async function () {
             describe("success", async function () {
-                it("should fund a project", async () => {
+                it("should fund a project with correct amount", async () => {
                     const { fundflow } = await loadFixture(deployFundFlowContractFixture)
 
                     const [deployer, funder] = await ethers.getSigners();
@@ -138,6 +138,26 @@ const { assert, expect } = require("chai")
                         // Check backer contributions
                         const contribution = await fundflow.roundBackerContributions(round.id, funder.address);
                         expect(contribution).equal(fundAmount.div(rounds.length).toString());
+                        expect(await fundflow.getBackers(round.id)).include(funder.address);
+                    }
+                });
+                it("should fund a project more than once with correct amount", async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture)
+
+                    const [deployer, funder] = await ethers.getSigners();
+                    const projectId = 0; // Replace with the actual project ID
+                    const fundAmount = ethers.utils.parseUnits("1", "ether");
+                    await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+                    await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+                    // Assert that the round's collected fund increased
+                    const rounds = await fundflow.getRounds(projectId);
+                    for (let index = 0; index < rounds.length; index++) {
+                        const round = rounds[index];
+                        expect(round.collectedFund).equal(fundAmount.mul(2).div(rounds.length).toString());
+                        // Check backer contributions
+                        const contribution = await fundflow.roundBackerContributions(round.id, funder.address);
+                        expect(contribution).equal(fundAmount.mul(2).div(rounds.length).toString());
+                        expect(await fundflow.getBackers(round.id)).include(funder.address);
                     }
                 });
             })
@@ -260,6 +280,17 @@ const { assert, expect } = require("chai")
                     expect(project.status).to.equal(2);
                     expect(project.currentRound).to.equal(0);
                 })
+                it("should return correct fund to funder if the round is failed", async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture)
+                    const projectId = 0;
+                    const [_, funder] = await ethers.getSigners();
+                    const fundAmount = ethers.utils.parseUnits("9", "ether");
+                    await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+                    const project = await fundflow.projects(projectId);
+
+                    await expect(fundflow.updateProjectStatus(projectId))
+                        .to.changeEtherBalance(funder, ethers.utils.parseUnits("9", "ether"));
+                })
             })
             describe("failed", async function () {
                 it("should failed since round not finished yet", async () => {
@@ -334,7 +365,7 @@ const { assert, expect } = require("chai")
                         expect(contribution).equal(ethers.utils.parseUnits("5", "ether") / 3);
                     });
 
-                    await expect(fundflow.connect(funder).quitProject(projectId, { from: funder.address }))
+                    await expect(fundflow.connect(funder).quitProject(projectId))
                         .to.changeEtherBalance(funder, ethers.utils.parseUnits("5", "ether").div(3).mul(2));
 
                     rounds = await fundflow.getRounds(projectId);
@@ -360,6 +391,20 @@ const { assert, expect } = require("chai")
                         // Check funder contributions
                         const contribution = await fundflow.roundBackerContributions(round.id, funder.address);
                         expect(contribution).equal("0");
+                    });
+                })
+
+                it("should remove funder record in rounds", async () => {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
+                    const [deployer, funder] = await ethers.getSigners();
+                    const projectId = 0;
+
+                    await fundflow.connect(funder).quitProject(projectId, { from: funder.address });
+                    // Assert that the round's collected fund decreased
+                    const rounds = await fundflow.getRounds(projectId);
+
+                    rounds.forEach(async (round) => {
+                        expect(await fundflow.getBackers(round.id)).is.not.contain(funder.address);
                     });
                 })
             })
