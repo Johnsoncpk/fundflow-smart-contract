@@ -84,6 +84,10 @@ contract FundFlow is ERC721URIStorage{
         return projects[_id];
     }
 
+    function getProjects() public view returns (Project[] memory) {
+        return projects;
+    }
+
     function getRounds(uint256 _projectId) public view returns (Round[] memory){
         if(_projectId > getProjectCount() - 1){
            revert IndexOutOfBounds();

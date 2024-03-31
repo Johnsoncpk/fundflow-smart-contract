@@ -25,21 +25,21 @@ const { assert, expect } = require("chai")
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
                         "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() / 1000) - 1,
+                        "endAt": Math.floor(Date.now() / 1000) - 100,
                     },
                     {
                         "id": 0,
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
                         "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now()/ 1000) + 5,
+                        "endAt": Math.floor(Date.now()/ 1000) + 50,
                     },
                     {
                         "id": 0,
                         "amountSentToCreator": 0,
                         "collectedFund": 0,
                         "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() / 1000) + 10,
+                        "endAt": Math.floor(Date.now() / 1000) + 100,
                     },
                 ],
                 ethers.utils.parseUnits("75", "ether")
@@ -54,8 +54,15 @@ const { assert, expect } = require("chai")
                 it("should successfully retreive the first projects", async function () {
                     const { fundflow } = await loadFixture(deployFundFlowContractFixture);
                     const projectId = await fundflow.getProjectCount() - 1;
-                    const project = await fundflow.projects(projectId);
+                    const project = await fundflow.getProject(projectId);
                     expect(project).is.not.null.and.undefined;
+                    expect(await fundflow.projectRounds).is.not.null.and.undefined;
+                });
+
+                it("should successfully retreive all projects", async function () {
+                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
+                    const projects = await fundflow.getProjects();
+                    expect(projects.length).is.equals(1);
                     expect(await fundflow.projectRounds).is.not.null.and.undefined;
                 });
 
@@ -228,21 +235,11 @@ const { assert, expect } = require("chai")
                     const fundAmount = ethers.utils.parseUnits("75", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
 
-                    const deployerPreviousBalcnce = await deployer.getBalance()
-                    // Call updateProjectStatus
-                    await fundflow.connect(funder).updateProjectStatus(projectId);
-                    const deployerAfterBalance = await deployer.getBalance();
-                    // Assert that the fund is distributed to the project creator
-                    const round = await fundflow.projectRounds(projectId, 0);
-                    const fundAfterPlatformFee = round.amountSentToCreator;
-                    const deployerBalanceDifferent = deployerAfterBalance - deployerPreviousBalcnce;
-
-                    var precision = 1000000;
-                    expect(Math.abs(deployerBalanceDifferent - fundAfterPlatformFee) <= precision).to.equal(true);
-                    expect(round.amountSentToCreator).equal(fundAfterPlatformFee.toString());
+                    await expect(fundflow.updateProjectStatus(projectId))
+                        .to.changeEtherBalance(deployer, ethers.utils.parseUnits("75", "ether").div(3).mul(99).div(100));
 
                     // Assert that the project status is updated correctly
-                    const project = await fundflow.projects(projectId);
+                    const project = await fundflow.getProject(projectId);
                     expect(project.status).to.equal(0); // Adjust based on your logic
                     expect(project.currentRound).to.equal(1);
                 })
@@ -279,7 +276,7 @@ const { assert, expect } = require("chai")
 
                     await fundflow.updateProjectStatus(projectId);
 
-                    const project = await fundflow.projects(projectId);
+                    const project = await fundflow.getProject(projectId);
                     expect(project.status).to.equal(1);
                     expect(project.currentRound).to.equal(1);
                 })
@@ -287,7 +284,7 @@ const { assert, expect } = require("chai")
                     const { fundflow } = await loadFixture(deployFundFlowContractFixture)
                     const projectId = 0;
                     await fundflow.updateProjectStatus(projectId);
-                    const project = await fundflow.projects(projectId);
+                    const project = await fundflow.getProject(projectId);
                     expect(project.status).to.equal(2);
                     expect(project.currentRound).to.equal(0);
                 })
