@@ -3,6 +3,47 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { developmentChains } = require("../../helper-hardhat-config")
 const { numToBytes32 } = require("../../helper-functions")
 const { assert, expect } = require("chai")
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
+
+async function createProject(fundflow, isRoundEnded = false) {
+    const firstRoundEndAt = isRoundEnded ? -1 : 1;
+    const today = new Date();
+    today.setMonth(today.getMonth() + firstRoundEndAt)
+    const date = today.getTime()
+    today.setMonth(today.getMonth() + 1)
+    const date2 = today.getTime()
+    today.setMonth(today.getMonth() + 1)
+    const date3 = today.getTime()
+
+    await fundflow.createProject(
+        "Test1",
+        "ipfs://test1",
+        [
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": 0,
+                "fundingGoal": ethers.utils.parseUnits("25", "ether"),
+                "endAt": Math.floor(date / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": 0,
+                "fundingGoal": ethers.utils.parseUnits("25", "ether"),
+                "endAt": Math.floor(date2 / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": 0,
+                "fundingGoal": ethers.utils.parseUnits("25", "ether"),
+                "endAt": Math.floor(date3 / 1000),
+            },
+        ],
+        ethers.utils.parseUnits("75", "ether")
+    )
+}
 
 !developmentChains.includes(network.name)
     ? describe.skip
@@ -16,34 +57,8 @@ const { assert, expect } = require("chai")
             const fundflowFactory = await ethers.getContractFactory("FundFlow")
             const fundflow = await fundflowFactory.connect(deployer).deploy()
 
-            await fundflow.createProject(
-                "Test1",
-                "ipfs://test1",
-                [
-                    {
-                        "id": 0,
-                        "amountSentToCreator": 0,
-                        "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() / 1000) - 100,
-                    },
-                    {
-                        "id": 0,
-                        "amountSentToCreator": 0,
-                        "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now()/ 1000) + 50,
-                    },
-                    {
-                        "id": 0,
-                        "amountSentToCreator": 0,
-                        "collectedFund": 0,
-                        "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                        "endAt": Math.floor(Date.now() / 1000) + 100,
-                    },
-                ],
-                ethers.utils.parseUnits("75", "ether")
-            )
+
+            await createProject(fundflow);
 
             return { fundflow }
         }
@@ -105,39 +120,39 @@ const { assert, expect } = require("chai")
             })
         }),
 
-        describe("create project", async function () {
-            describe("success", async function () {
-                it("should create a project", async () => {
-                    const { fundflow } = await loadFixture(deployFundFlowContractFixture);
-                    const projectName = "My Project";
-                    const projectUrl = "https://example.com";
-                    const totalFundingGoal = 1000;
-                    const rounds = [
-                        { "id": 0, "amountSentToCreator": 0, "collectedFund": 0, fundingGoal: 600, endAt: Math.floor(Date.now() / 1000) + 3600 }, // 1 hour from now
-                        { "id": 0, "amountSentToCreator": 0, "collectedFund": 0, fundingGoal: 400, endAt: Math.floor(Date.now() / 1000) + 3600 }, // 1 hour from now
-                        // Add more rounds if needed
-                    ];
+            describe("create project", async function () {
+                describe("success", async function () {
+                    it("should create a project", async () => {
+                        const { fundflow } = await loadFixture(deployFundFlowContractFixture);
+                        const projectName = "My Project";
+                        const projectUrl = "https://example.com";
+                        const totalFundingGoal = 1000;
+                        const rounds = [
+                            { "id": 0, "amountSentToCreator": 0, "collectedFund": 0, fundingGoal: 600, endAt: Math.floor(Date.now() / 1000) + 3600 }, // 1 hour from now
+                            { "id": 0, "amountSentToCreator": 0, "collectedFund": 0, fundingGoal: 400, endAt: Math.floor(Date.now() / 1000) + 3600 }, // 1 hour from now
+                            // Add more rounds if needed
+                        ];
 
-                    let result = await fundflow.createProject(projectName, projectUrl, rounds, totalFundingGoal);
-                    result = await fundflow.getProject(1);
-                    // Assert project creation
-                    expect(result.name).to.equal(projectName);
-                    expect(result.url).to.equal(projectUrl);
-                    expect(result.totalFundingGoal).equal(totalFundingGoal.toString());
-                    // Add more assertions for other properties
+                        let result = await fundflow.createProject(projectName, projectUrl, rounds, totalFundingGoal);
+                        result = await fundflow.getProject(1);
+                        // Assert project creation
+                        expect(result.name).to.equal(projectName);
+                        expect(result.url).to.equal(projectUrl);
+                        expect(result.totalFundingGoal).equal(totalFundingGoal.toString());
+                        // Add more assertions for other properties
 
-                    // Check if project count increased
-                    const projectCount = await fundflow.getProjectCount();
-                    expect(projectCount).equal("2");
+                        // Check if project count increased
+                        const projectCount = await fundflow.getProjectCount();
+                        expect(projectCount).equal("2");
 
-                    // check if the round no and id generate correctly
-                    const resultRounds = await fundflow.getRounds(1);
+                        // check if the round no and id generate correctly
+                        const resultRounds = await fundflow.getRounds(1);
 
-                    expect(resultRounds[0].id).equal("3");
-                    expect(resultRounds[1].id).equal("4");
+                        expect(resultRounds[0].id).equal("3");
+                        expect(resultRounds[1].id).equal("4");
+                    })
                 })
             })
-        })
 
         describe("fund project", async function () {
             describe("success", async function () {
@@ -204,6 +219,9 @@ const { assert, expect } = require("chai")
                     const fundAmount = ethers.utils.parseUnits("0.25", "ether");
 
                     fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount })
+
+                    await time.increase(2594000);
+
                     await fundflow.updateProjectStatus(projectId);
 
                     await expect(fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount }))
@@ -234,6 +252,8 @@ const { assert, expect } = require("chai")
                     // Set up a round with collected funds and funding goal
                     const fundAmount = ethers.utils.parseUnits("75", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+
+                    await time.increase(2594000);
 
                     await expect(fundflow.updateProjectStatus(projectId))
                         .to.changeEtherBalance(deployer, ethers.utils.parseUnits("75", "ether").div(3).mul(99).div(100));
@@ -272,6 +292,8 @@ const { assert, expect } = require("chai")
                     const fundAmount = ethers.utils.parseUnits("50", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
 
+                    await time.increase(2594000);
+
                     await fundflow.updateProjectStatus(projectId);
 
                     await fundflow.updateProjectStatus(projectId);
@@ -283,6 +305,7 @@ const { assert, expect } = require("chai")
                 it("should update project to failed", async () => {
                     const { fundflow } = await loadFixture(deployFundFlowContractFixture)
                     const projectId = 0;
+                    await time.increase(2594000);
                     await fundflow.updateProjectStatus(projectId);
                     const project = await fundflow.getProject(projectId);
                     expect(project.status).to.equal(2);
@@ -294,6 +317,7 @@ const { assert, expect } = require("chai")
                     const [_, funder] = await ethers.getSigners();
                     const fundAmount = ethers.utils.parseUnits("9", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+                    await time.increase(2594000);
                     await expect(fundflow.updateProjectStatus(projectId))
                         .to.changeEtherBalance(funder, ethers.utils.parseUnits("9", "ether"));
                 })
@@ -320,7 +344,7 @@ const { assert, expect } = require("chai")
                     )
                     const fundAmount = ethers.utils.parseUnits("0.75", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
-                        
+
                     await expect(fundflow.updateProjectStatus(projectId))
                         .to.be.revertedWithCustomError(fundflow, "RoundNotFinished");
                 })
@@ -328,24 +352,13 @@ const { assert, expect } = require("chai")
                 it("should failed since the fund has been collected", async () => {
                     const { fundflow } = await loadFixture(deployFundFlowContractFixture);
                     const [deployer, funder] = await ethers.getSigners();
-                    const projectId = 1;
+                    const projectId = 0;
 
-                    await fundflow.createProject(
-                        "Test2",
-                        "ipfs://test2",
-                        [
-                            {
-                                "id": 0,
-                                "amountSentToCreator": 0,
-                                "collectedFund": 0,
-                                "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-                                "endAt": Math.floor(Date.now() / 1000),
-                            }
-                        ],
-                        ethers.utils.parseUnits("25", "ether")
-                    )
                     const fundAmount = ethers.utils.parseUnits("25", "ether");
                     await fundflow.connect(funder).fundProject(projectId, { from: funder.address, value: fundAmount });
+
+                    await time.increase(2594000);
+
                     await fundflow.updateProjectStatus(projectId);
 
                     await expect(fundflow.updateProjectStatus(projectId))
@@ -372,7 +385,7 @@ const { assert, expect } = require("chai")
                         expect(contribution).equal(ethers.utils.parseUnits("5", "ether") / 3);
                     });
 
-
+                    await time.increase(2594000);
 
                     await expect(fundflow.connect(funder).quitProject(projectId))
                         .to.changeEtherBalance(funder, ethers.utils.parseUnits("5", "ether").div(3).mul(2));

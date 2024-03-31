@@ -3,8 +3,8 @@
 pragma solidity ^0.8.16;
 pragma experimental ABIEncoderV2;
 
-import { ERC721, ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import {ERC721, ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 using Counters for Counters.Counter;
 
 enum Status {
@@ -14,8 +14,8 @@ enum Status {
 }
 
 struct Backer {
-   address backerAddress;
-   uint256 contribution;
+    address backerAddress;
+    uint256 contribution;
 }
 
 struct Round {
@@ -45,23 +45,17 @@ error FundAlreadyCollected();
 error RoundNotFinished();
 error ProjectCompleted();
 
-contract FundFlow is ERC721URIStorage{
-    event ProjectCreated(
-        Project project
-    );
+contract FundFlow is ERC721URIStorage {
+    event ProjectCreated(Project project);
     event ProjectFunded(
         uint256 indexed id,
         uint256 round,
         uint256 amount,
         address payable funder
     );
-    event ProjectStatusUpdated(
-        uint256 id,
-        Status status);
-    event ProjectQuited(
-        uint256 id,
-        address payable quiter);
-    
+    event ProjectStatusUpdated(uint256 id, Status status);
+    event ProjectQuited(uint256 id, address payable quiter);
+
     Counters.Counter private roundId;
 
     Project[] public projects;
@@ -69,7 +63,8 @@ contract FundFlow is ERC721URIStorage{
     // roundId -> address[]
     mapping(uint256 => address[]) public roundBackers;
     // roundId -> address -> contribution
-    mapping(uint256 => mapping(address => uint256)) public roundBackerContributions;
+    mapping(uint256 => mapping(address => uint256))
+        public roundBackerContributions;
 
     constructor() ERC721("FundFlow", "FLOW") {}
 
@@ -78,8 +73,8 @@ contract FundFlow is ERC721URIStorage{
     }
 
     function getProject(uint256 _id) public view returns (Project memory) {
-        if(_id > getProjectCount() - 1){
-           revert IndexOutOfBounds();
+        if (_id > getProjectCount() - 1) {
+            revert IndexOutOfBounds();
         }
         return projects[_id];
     }
@@ -88,14 +83,18 @@ contract FundFlow is ERC721URIStorage{
         return projects;
     }
 
-    function getRounds(uint256 _projectId) public view returns (Round[] memory){
-        if(_projectId > getProjectCount() - 1){
-           revert IndexOutOfBounds();
+    function getRounds(
+        uint256 _projectId
+    ) public view returns (Round[] memory) {
+        if (_projectId > getProjectCount() - 1) {
+            revert IndexOutOfBounds();
         }
         return projectRounds[_projectId];
     }
 
-    function getBackers(uint256 _roundId) public view returns (address[] memory){
+    function getBackers(
+        uint256 _roundId
+    ) public view returns (address[] memory) {
         return roundBackers[_roundId];
     }
 
@@ -107,15 +106,17 @@ contract FundFlow is ERC721URIStorage{
     ) public returns (Project memory) {
         uint256 projectId = getProjectCount();
 
-        projects.push(Project(
-            _name,
-            _url,
-            _totalFundingGoal,
-            _rounds.length,
-            0,
-            payable(msg.sender),
-            Status.Active
-        ));
+        projects.push(
+            Project(
+                _name,
+                _url,
+                _totalFundingGoal,
+                _rounds.length,
+                0,
+                payable(msg.sender),
+                Status.Active
+            )
+        );
 
         createRounds(projectId, _rounds);
 
@@ -126,10 +127,19 @@ contract FundFlow is ERC721URIStorage{
         return projects[projectId];
     }
 
-    function createRounds(uint256 _projectId, Round[] calldata _rounds) internal {
+    function createRounds(
+        uint256 _projectId,
+        Round[] calldata _rounds
+    ) internal {
         for (uint256 i = 0; i < _rounds.length; i++) {
             projectRounds[_projectId].push(
-                Round(roundId.current(), 0, 0, _rounds[i].fundingGoal, _rounds[i].endAt)
+                Round(
+                    roundId.current(),
+                    0,
+                    0,
+                    _rounds[i].fundingGoal,
+                    _rounds[i].endAt
+                )
             );
 
             roundId.increment();
@@ -137,39 +147,54 @@ contract FundFlow is ERC721URIStorage{
             // todo: create scheduled task for each round
         }
     }
- 
+
     function fundProject(uint256 _projectId) public payable {
         Project memory project = projects[_projectId];
-        
-        if(project.status != Status.Active){
+        Round memory currentRound = projectRounds[_projectId][
+            project.currentRound
+        ];
+
+        if (currentRound.endAt < block.timestamp) {
             revert FundingPeriodEnded();
         }
-        
-        if(msg.value <= 0){
+
+        if (msg.value <= 0) {
             revert InsufficientAmount();
         }
 
-        uint256 remainRound = getRounds(_projectId).length - project.currentRound;
+        uint256 remainRound = getRounds(_projectId).length -
+            project.currentRound;
         uint256 fundPerRound = msg.value / remainRound;
 
-        for (uint256 i = project.currentRound; i < projectRounds[_projectId].length; i++) {
+        for (
+            uint256 i = project.currentRound;
+            i < projectRounds[_projectId].length;
+            i++
+        ) {
             Round storage round = projectRounds[_projectId][i];
             round.collectedFund += fundPerRound;
             roundBackers[round.id].push(msg.sender);
             roundBackerContributions[round.id][msg.sender] += fundPerRound;
         }
 
-        emit ProjectFunded(_projectId, project.currentRound, msg.value, payable(msg.sender));
+        emit ProjectFunded(
+            _projectId,
+            project.currentRound,
+            msg.value,
+            payable(msg.sender)
+        );
     }
 
-    function returnFundToBacker(uint256 _projectId) internal{
+    function returnFundToBacker(uint256 _projectId) internal {
         Project memory project = projects[_projectId];
-        for (uint256 index = project.currentRound; index < project.totalRound; index++) 
-        {
+        for (
+            uint256 index = project.currentRound;
+            index < project.totalRound;
+            index++
+        ) {
             Round storage round = projectRounds[_projectId][index];
             address[] memory backers = roundBackers[round.id];
-            for (uint256 j = 0; j < backers.length; j++) 
-            {
+            for (uint256 j = 0; j < backers.length; j++) {
                 address backer = backers[j];
                 uint256 contributedFund = roundBackerContributions[j][backer];
                 round.collectedFund -= contributedFund;
@@ -178,24 +203,29 @@ contract FundFlow is ERC721URIStorage{
         }
     }
 
-    function quitProject(uint256 _projectId) public payable{
+    function quitProject(uint256 _projectId) public payable {
         Project storage project = projects[_projectId];
         uint256 backerRemainingFund = 0;
-        for(uint256 i = project.currentRound; i < projectRounds[_projectId].length; i++){
+        for (
+            uint256 i = project.currentRound;
+            i < projectRounds[_projectId].length;
+            i++
+        ) {
             Round storage round = projectRounds[_projectId][i];
 
-            if(round.endAt < block.timestamp){
+            if (round.endAt < block.timestamp) {
                 continue;
             }
 
-            uint256 contributedFund = roundBackerContributions[round.id][msg.sender];
+            uint256 contributedFund = roundBackerContributions[round.id][
+                msg.sender
+            ];
             round.collectedFund -= contributedFund;
             backerRemainingFund += contributedFund;
-            
+
             address[] storage backers = roundBackers[round.id];
-            for (uint256 j = 0; j < backers.length; j++) 
-            {
-                if(backers[j] != msg.sender){
+            for (uint256 j = 0; j < backers.length; j++) {
+                if (backers[j] != msg.sender) {
                     continue;
                 }
                 backers[j] = backers[backers.length - 1];
@@ -210,33 +240,35 @@ contract FundFlow is ERC721URIStorage{
 
     function updateProjectStatus(uint256 _projectId) public {
         Project storage project = projects[_projectId];
-        if(project.status != Status.Active){
+        if (project.status != Status.Active) {
             revert ProjectCompleted();
         }
 
-        Round storage currentRound =  projectRounds[_projectId][project.currentRound];
-        if(currentRound.endAt > block.timestamp){
+        Round storage currentRound = projectRounds[_projectId][
+            project.currentRound
+        ];
+
+        if (currentRound.endAt > block.timestamp) {
             revert RoundNotFinished();
         }
 
         Status status = project.status;
 
-        if(currentRound.collectedFund < currentRound.fundingGoal){
+        if (currentRound.collectedFund < currentRound.fundingGoal) {
             project.status = Status.Failed;
             returnFundToBacker(_projectId);
             emit ProjectStatusUpdated(_projectId, status);
             return;
         }
 
-        if(project.currentRound == project.totalRound - 1){
+        if (project.currentRound == project.totalRound - 1) {
             status = Status.Completed;
-        }
-        else{
+        } else {
             project.currentRound++;
         }
 
         // distribute fund to project creator
-        uint256 fundAfterPlatformFee = currentRound.collectedFund * 99 / 100;
+        uint256 fundAfterPlatformFee = (currentRound.collectedFund * 99) / 100;
         project.creator.transfer(fundAfterPlatformFee);
         currentRound.amountSentToCreator = fundAfterPlatformFee;
         project.status = status;
