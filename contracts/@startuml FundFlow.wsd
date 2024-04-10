@@ -1,0 +1,112 @@
+@startuml FundFlow
+' -- classes --
+class FundFlow {
+    ' -- inheritance --
+	{abstract}ERC721URIStorage
+
+    ' -- usingFor --
+
+    ' -- vars --
+	-[[Counters.Counter]] roundId
+	+[[Project]] projects
+	+[[mapping uint256=>null ]] projectRounds
+	+[[mapping uint256=>null ]] roundBackers
+	+[[mapping uint256=>mapping address=>uint256  ]] roundBackerContributions
+
+    ' -- methods --
+	+**__constructor__**()
+	+🔍getProjectCount()
+	+🔍getProject()
+	+🔍getProjects()
+	+🔍getRounds()
+	+🔍getBackers()
+	+createProject()
+	#createRounds()
+	+💰fundProject()
+	#returnFundToBacker()
+	+💰quitProject()
+	+updateProjectStatus()
+
+}
+class ERC721URIStorage {
+    ' -- inheritance --
+	{abstract}ERC721
+
+    ' -- usingFor --
+	{abstract}📚Strings for [[uint256]]
+
+    ' -- vars --
+	-[[mapping uint256=>string ]] _tokenURIs
+
+    ' -- methods --
+	+🔍tokenURI()
+	#_setTokenURI()
+	#_burn()
+
+}
+
+class ERC721 {
+    ' -- inheritance --
+	{abstract}Context
+	{abstract}ERC165
+	{abstract}IERC721
+	{abstract}IERC721Metadata
+
+    ' -- usingFor --
+	{abstract}📚Address for [[address]]
+	{abstract}📚Strings for [[uint256]]
+
+    ' -- vars --
+	-[[string]] _name
+	-[[string]] _symbol
+	-[[mapping uint256=>address ]] _owners
+	-[[mapping address=>uint256 ]] _balances
+	-[[mapping uint256=>address ]] _tokenApprovals
+	-[[mapping address=>mapping address=>bool  ]] _operatorApprovals
+
+    ' -- methods --
+	+**__constructor__**()
+	+🔍supportsInterface()
+	+🔍balanceOf()
+	+🔍ownerOf()
+	+🔍name()
+	+🔍symbol()
+	+🔍tokenURI()
+	#🔍_baseURI()
+	+approve()
+	+🔍getApproved()
+	+setApprovalForAll()
+	+🔍isApprovedForAll()
+	+transferFrom()
+	+safeTransferFrom()
+	+safeTransferFrom()
+	#_safeTransfer()
+	#🔍_exists()
+	#🔍_isApprovedOrOwner()
+	#_safeMint()
+	#_safeMint()
+	#_mint()
+	#_burn()
+	#_transfer()
+	#_approve()
+	-_checkOnERC721Received()
+	#_beforeTokenTransfer()
+
+}
+
+' -- inheritance / usingFor --
+ERC721URIStorage -left-|> ERC721
+
+' -- inheritance / usingFor --
+ERC721 --[#DarkGoldenRod]|> Context
+ERC721 --[#DarkGoldenRod]|> ERC165
+ERC721 --[#DarkGoldenRod]|> IERC721
+ERC721 --[#DarkGoldenRod]|> IERC721Metadata
+ERC721 ..[#DarkOliveGreen]|> Address : //for address//
+ERC721 ..[#DarkOliveGreen]|> Strings : //for uint256//
+
+
+' -- inheritance / usingFor --
+FundFlow -left-|> ERC721URIStorage
+
+@enduml

@@ -44,6 +44,7 @@ error IndexOutOfBounds();
 error FundAlreadyCollected();
 error RoundNotFinished();
 error ProjectCompleted();
+error IsNotOwner();
 
 contract FundFlow is ERC721URIStorage {
     event ProjectCreated(Project project);
@@ -96,6 +97,14 @@ contract FundFlow is ERC721URIStorage {
         uint256 _roundId
     ) public view returns (address[] memory) {
         return roundBackers[_roundId];
+    }
+
+    function setProjectUri(uint256 _projectId, string memory _url) public {
+        _setTokenURI(_projectId, _url);
+        if (msg.sender != projects[_projectId].creator) {
+            revert IsNotOwner();
+        }
+        projects[_projectId].url = _url;
     }
 
     function createProject(

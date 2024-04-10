@@ -33,91 +33,116 @@ async function initFundflow() {
 
     const fundflowFactory = await ethers.getContractFactory("FundFlow")
     const fundflow = await fundflowFactory.connect(deployer).deploy()
-
+    await fundflow.deployed();
     console.log(`FundFlow Project deployed to ${fundflow.address} on ${network.name}`)
-    // {
-    //     name = "",
-    //     description= "",
-    //     category= string,
-    //     totalFundingGoal= number,
-    //     totalRound= number,
-    //     rounds= ProjectRound,
-    //     editorState= string,
-    // }
 
+    const _ = await deployer.sendTransaction({
+        to: fundflow.address,
+        value: ethers.utils.parseEther("500")
+    });
 
-    // for (let index = 0; index < 20; index++) {
-    //     const element = array[index];
-
-    // }
 
     const today = new Date();
-    today.setMonth(today.getMonth()+1)
-    const date = today.getTime()
-    today.setMonth(today.getMonth()+1)
-    const date2 = today.getTime()
-    today.setMonth(today.getMonth()+1)
-    const date3 = today.getTime()
+    today.setMonth(today.getMonth() - 1)
+    const lastMonth = today.getTime()
+    today.setMonth(today.getMonth() - 1)
+    const lastTwoMonth = today.getTime()
+    today.setMonth(today.getMonth() + 3)
+    const nextMonth = today.getTime()
+    today.setMonth(today.getMonth() + 1)
+    const nextTwoMonth = today.getTime()
+    today.setMonth(today.getMonth() + 1)
+    const nextThreeMonth = today.getTime()
+
     await fundflow.connect(user).createProject(
         "Edie Carey & Sarah Sample: A NEW ALBUM of Comforting Songs",
-        "ipfs://Qmdj7umjkkpbSujuVEvDKqBHiAbGQi5hDvEuyHXn6gjar9",
+        "ipfs://QmSViwk2mxoM8T58i9SLjDZkTDdDJtjdjfsKxNYmEn5M8w",
         [
             {
                 "id": 0,
                 "amountSentToCreator": 0,
                 "collectedFund": 0,
                 "fundingGoal": ethers.utils.parseUnits("5", "ether"),
-                "endAt": Math.floor(date / 1000),
+                "endAt": Math.floor(nextMonth / 1000),
             },
             {
                 "id": 0,
                 "amountSentToCreator": 0,
                 "collectedFund": 0,
                 "fundingGoal": ethers.utils.parseUnits("5", "ether"),
-                "endAt": Math.floor(date2 / 1000),
+                "endAt": Math.floor(nextTwoMonth / 1000),
             },
             {
                 "id": 0,
                 "amountSentToCreator": 0,
                 "collectedFund": 0,
                 "fundingGoal": ethers.utils.parseUnits("5", "ether"),
-                "endAt": Math.floor(date3 / 1000),
+                "endAt": Math.floor(nextThreeMonth / 1000),
             },
         ],
         ethers.utils.parseUnits("15", "ether")
     )
 
-    console.log(await fundflow.getProjects());
-    console.log(await fundflow.getRounds(0));
+    await fundflow.connect(user).createProject(
+        "Edie Carey & Sarah Sample: A NEW ALBUM of Comforting Songs",
+        "ipfs://QmSViwk2mxoM8T58i9SLjDZkTDdDJtjdjfsKxNYmEn5M8w",
+        [
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": ethers.utils.parseUnits("5.5", "ether"),
+                "fundingGoal": ethers.utils.parseUnits("5", "ether"),
+                "endAt": Math.floor(lastMonth / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": 0,
+                "fundingGoal": ethers.utils.parseUnits("5", "ether"),
+                "endAt": Math.floor(nextMonth / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": 0,
+                "collectedFund": 0,
+                "fundingGoal": ethers.utils.parseUnits("5", "ether"),
+                "endAt": Math.floor(nextThreeMonth / 1000),
+            },
+        ],
+        ethers.utils.parseUnits("15", "ether")
+    )
+    await fundflow.connect(user).updateProjectStatus(1);
 
-    // await fundflow.connect(user).createProject(
-    //     "Test2",
-    //     "ipfs://QmbaKEPZhTNFvChD5HcKuqUposmxJFiLybFBzeVLmonV6t",
-    //     [
-    //         {
-    //             "id": 0,
-    //             "amountSentToCreator": 0,
-    //             "collectedFund": 0,
-    //             "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-    //             "endAt": Math.floor(Date.now() / 1000) - 1,
-    //         },
-    //         {
-    //             "id": 0,
-    //             "amountSentToCreator": 0,
-    //             "collectedFund": 0,
-    //             "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-    //             "endAt": Math.floor(Date.now() / 1000) + 5,
-    //         },
-    //         {
-    //             "id": 0,
-    //             "amountSentToCreator": 0,
-    //             "collectedFund": 0,
-    //             "fundingGoal": ethers.utils.parseUnits("25", "ether"),
-    //             "endAt": Math.floor(Date.now() / 1000) + 10,
-    //         },
-    //     ],
-    //     ethers.utils.parseUnits("75", "ether")
-    // )
+    await fundflow.connect(user).createProject(
+        "Edie Carey & Sarah Sample: A NEW ALBUM of Comforting Songs",
+        "ipfs://QmSViwk2mxoM8T58i9SLjDZkTDdDJtjdjfsKxNYmEn5M8w",
+        [
+            {
+                "id": 0,
+                "amountSentToCreator": ethers.utils.parseUnits("0", "ether"),
+                "collectedFund": ethers.utils.parseUnits("12", "ether"),
+                "fundingGoal": ethers.utils.parseUnits("10", "ether"),
+                "endAt": Math.floor(lastTwoMonth / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": ethers.utils.parseUnits("0", "ether"),
+                "collectedFund": ethers.utils.parseUnits("12", "ether"),
+                "fundingGoal": ethers.utils.parseUnits("10", "ether"),
+                "endAt": Math.floor(lastMonth / 1000),
+            },
+            {
+                "id": 0,
+                "amountSentToCreator": ethers.utils.parseUnits("0", "ether"),
+                "collectedFund": ethers.utils.parseUnits("12", "ether"),
+                "fundingGoal": ethers.utils.parseUnits("10", "ether"),
+                "endAt": Math.floor(new Date() / 1000),
+            },
+        ],
+        ethers.utils.parseUnits("30", "ether")
+    )
+    await fundflow.connect(user).updateProjectStatus(2);
+    await fundflow.connect(user).updateProjectStatus(2);
 }
 
 async function main() {
