@@ -10,7 +10,8 @@ using Counters for Counters.Counter;
 enum Status {
     Active,
     Completed,
-    Failed
+    Failed,
+    Canceled
 }
 
 struct Backer {
@@ -45,6 +46,7 @@ error FundAlreadyCollected();
 error RoundNotFinished();
 error ProjectCompleted();
 error IsNotOwner();
+error ProjectStarted();
 
 contract FundFlow is ERC721URIStorage {
     event ProjectCreated(Project project);
@@ -67,7 +69,7 @@ contract FundFlow is ERC721URIStorage {
     mapping(uint256 => mapping(address => uint256))
         public roundBackerContributions;
 
-    constructor() ERC721("FundFlow", "FLOW") {}
+    constructor() payable ERC721("FundFlow", "FLOW") {}
 
     function getProjectCount() public view returns (uint256) {
         return projects.length;
@@ -144,8 +146,10 @@ contract FundFlow is ERC721URIStorage {
             projectRounds[_projectId].push(
                 Round(
                     roundId.current(),
-                    0,
-                    0,
+                    /// this should be zere, just change it for demo purpose.
+                    _rounds[i].amountSentToCreator,
+                    _rounds[i].collectedFund,
+                    /// end
                     _rounds[i].fundingGoal,
                     _rounds[i].endAt
                 )
@@ -205,9 +209,10 @@ contract FundFlow is ERC721URIStorage {
             address[] memory backers = roundBackers[round.id];
             for (uint256 j = 0; j < backers.length; j++) {
                 address backer = backers[j];
-                uint256 contributedFund = roundBackerContributions[j][backer];
+                uint256 contributedFund = roundBackerContributions[round.id][backer];
                 round.collectedFund -= contributedFund;
                 payable(backer).transfer(contributedFund);
+                delete roundBackerContributions[round.id][backer];
             }
         }
     }
@@ -245,6 +250,16 @@ contract FundFlow is ERC721URIStorage {
 
         payable(msg.sender).transfer(backerRemainingFund);
         emit ProjectQuited(_projectId, payable(msg.sender));
+    }
+
+    function cancelProject(uint256 _projectId) public {
+        Project storage project = projects[_projectId];
+        if (project.currentRound != 0) {
+            revert ProjectStarted();
+        }
+        project.status = Status.Canceled;
+        returnFundToBacker(_projectId);
+        emit ProjectStatusUpdated(_projectId, project.status);
     }
 
     function updateProjectStatus(uint256 _projectId) public {
