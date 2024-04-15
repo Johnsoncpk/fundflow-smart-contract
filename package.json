@@ -1,8 +1,8 @@
 {
-  "name": "hardhat-starter-kit",
+  "name": "fundflow.smartcontract",
   "license": "MIT",
-  "version": "2.0.0",
-  "description": "A repo for boilerplate code for testing, deploying, and shipping chainlink solidity code.",
+  "version": "0.0.1",
+  "description": "A repo for fundflow, a POC of decentralized crowdfunding platform.",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test test/unit/*.spec.js",
