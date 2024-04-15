@@ -20,7 +20,7 @@ Before you can set up this repository, make sure you have the following installe
 2. Navigate to the project directory:
 
     ```shell
-    cd FundFlow.SmartContract
+    cd fundflow-smart-contract
     ```
 
 3. Install the project dependencies using Yarn:
