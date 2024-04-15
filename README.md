@@ -14,7 +14,7 @@ Before you can set up this repository, make sure you have the following installe
 1. Clone this repository to your local machine:
 
     ```shell
-    git clone https://github.com/Johnsoncpk/FundFlow.SmartContract
+    git clone https://github.com/Johnsoncpk/fundflow-smart-contract
     ```
 
 2. Navigate to the project directory:
